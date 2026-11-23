@@ -1,6 +1,6 @@
 // Local Storage persistence helper for Guide.In learning progress
 
-import { ModuleId } from '../types/workflow';
+import { ModuleId, AppMode } from '../types/workflow';
 
 const STORAGE_KEY = 'guide_in_learning_progress_v1';
 
@@ -8,6 +8,8 @@ export interface PersistedProgress {
   unlockedModules: ModuleId[];
   completedModules: ModuleId[];
   lastActiveModuleId: ModuleId;
+  lastMode: AppMode;
+  lastStepIndex: number;
   lastVisitedTimestamp: number;
 }
 
@@ -15,6 +17,8 @@ const DEFAULT_PROGRESS: PersistedProgress = {
   unlockedModules: ['business-partner'],
   completedModules: [],
   lastActiveModuleId: 'business-partner',
+  lastMode: 'landing',
+  lastStepIndex: 0,
   lastVisitedTimestamp: Date.now(),
 };
 

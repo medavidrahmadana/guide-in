@@ -4,16 +4,18 @@ import {
   Building2, 
   MapPin, 
   UserCheck, 
-  Truck, 
   Save, 
   Search, 
   PlusCircle, 
   AlertCircle, 
   CheckCircle2, 
   ArrowRight,
-  ExternalLink,
   ShieldCheck,
-  FileBadge
+  Calendar,
+  Lock,
+  ChevronRight,
+  HelpCircle,
+  Sparkles
 } from 'lucide-react';
 
 interface ModuleBPInteractiveProps {
@@ -27,105 +29,125 @@ interface ModuleBPInteractiveProps {
 export const ModuleBPInteractive: React.FC<ModuleBPInteractiveProps> = ({
   module,
   activeStepIndex,
-  isPresentation,
   onStepChange,
   onCompleteModule,
 }) => {
-  // Simulator State
-  const [originInfo, setOriginInfo] = useState('CUSTOM');
-  const [legalName, setLegalName] = useState('PT BUSANA INDAH GEMILANG');
-  const [shortName, setShortName] = useState('BIG-BANDUNG');
-  const [fiscalType, setFiscalType] = useState('01');
-  const [taxRegNo, setTaxRegNo] = useState('01.234.567.8-429.000');
-  
-  // Address
-  const [country, setCountry] = useState('ID - INDONESIA');
-  const [plotNumber, setPlotNumber] = useState('Blok C No. 12');
-  const [streetArea, setStreetArea] = useState('Jl. Raya Rancaekek KM 24.5');
-  const [address1, setAddress1] = useState('Kawasan Industri Dwipapuri');
-  const [district, setDistrict] = useState('Sumedang');
-  const [phone, setPhone] = useState('+62 22 7564 8899');
-
-  // Contact
-  const [contactPerson, setContactPerson] = useState('Bpk. Hendra Gunawan');
-  const [position, setPosition] = useState('Procurement Manager');
-  const [contactPhone, setContactPhone] = useState('+62 812 3456 7890');
-  const [email, setEmail] = useState('purchasing@busanaindah.co.id');
-
-  // Delivery Address (Delivery Point)
-  const [deliveryCode, setDeliveryCode] = useState('DEL-01-WH');
-  const [deliveryAddressee, setDeliveryAddressee] = useState('Pabrik Garment Unit 2 - Majalaya');
-  const [deliveryPoints, setDeliveryPoints] = useState<string[]>([
-    'DEL-01-WH (Pabrik Garment Unit 2 - Majalaya)'
-  ]);
-
-  // Saved BP ID
-  const [generatedBpId, setGeneratedBpId] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
-
-  // Typewriter effect state for Process Finder search bar with 5-second recurring loop
-  const targetSearchText = 'Business Partner';
-  const [typedSearchText, setTypedSearchText] = useState('');
-  const [isTypingDone, setIsTypingDone] = useState(false);
-
-  useEffect(() => {
-    if (activeStepIndex !== 0) {
-      setTypedSearchText('');
-      setIsTypingDone(false);
-      return;
-    }
-
-    let intervalId: any = null;
-    let restartTimeoutId: any = null;
-
-    const startTyping = () => {
-      setTypedSearchText('');
-      setIsTypingDone(false);
-      let currentIndex = 0;
-
-      intervalId = setInterval(() => {
-        if (currentIndex < targetSearchText.length) {
-          setTypedSearchText(targetSearchText.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          setIsTypingDone(true);
-          if (intervalId) clearInterval(intervalId);
-
-          // Jeda 5 detik setelah selesai ngetik, lalu ulangi animasi dari awal
-          restartTimeoutId = setTimeout(() => {
-            startTyping();
-          }, 5000);
-        }
-      }, 100); // Kecepatan ngetik per karakter (~1.6 detik total)
-    };
-
-    startTyping();
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-      if (restartTimeoutId) clearTimeout(restartTimeoutId);
-    };
-  }, [activeStepIndex]);
-
-  const currentStep = module.steps[activeStepIndex];
-
-  const handleAddDeliveryPoint = () => {
-    if (deliveryCode && deliveryAddressee) {
-      setDeliveryPoints([...deliveryPoints, `${deliveryCode} (${deliveryAddressee})`]);
-      setDeliveryCode('');
-      setDeliveryAddressee('');
+  // Sync tab state with stepper step index (2-way binding)
+  // Step 0: Process Finder
+  // Step 1: Base tab
+  // Step 2: Base2 tab
+  // Step 3: Address tab
+  // Step 4: Contact book tab
+  // Step 5: Save & confirmation
+  const getTabFromStep = (stepIdx: number): 'Base' | 'Base2' | 'Address' | 'Contact book' => {
+    switch (stepIdx) {
+      case 2:
+        return 'Base2';
+      case 3:
+        return 'Address';
+      case 4:
+        return 'Contact book';
+      default:
+        return 'Base';
     }
   };
 
+  const [activeTab, setActiveTab] = useState<'Base' | 'Base2' | 'Address' | 'Contact book'>(
+    getTabFromStep(activeStepIndex)
+  );
+
+  // Update activeTab whenever activeStepIndex changes from top stepper
+  useEffect(() => {
+    setActiveTab(getTabFromStep(activeStepIndex));
+  }, [activeStepIndex]);
+
+  // When user clicks a tab directly, sync stepper as well!
+  const handleSelectTab = (tab: 'Base' | 'Base2' | 'Address' | 'Contact book') => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Base':
+        onStepChange(1);
+        break;
+      case 'Base2':
+        onStepChange(2);
+        break;
+      case 'Address':
+        onStepChange(3);
+        break;
+      case 'Contact book':
+        onStepChange(4);
+        break;
+    }
+  };
+
+  // Form Fields State matching Datatex Screenshots
+  const [numberId] = useState('0');
+  const [originInfoType, setOriginInfoType] = useState('CUSTOMER');
+  const [endDate, setEndDate] = useState('');
+  const [substitute, setSubstitute] = useState('0');
+  const [legalName, setLegalName] = useState('PT. Bojongsantos'); // *Mandatory
+  const [legalSurname, setLegalSurname] = useState('');
+  const [shortName, setShortName] = useState('BOJONGSANTOS');
+  const [searchName, setSearchName] = useState('bojongsantos');
+  const [group, setGroup] = useState('0');
+  const [isSundry, setIsSundry] = useState(false);
+  const [fiscalType, setFiscalType] = useState('01'); // *Mandatory
+  const [fiscalCode, setFiscalCode] = useState('01.234.567.8-429.000'); // *Mandatory
+  const [taxRegNo, setTaxRegNo] = useState('01.234.567.8-429.000');
+  const [eoriCode, setEoriCode] = useState('');
+  const [fiscalRepresentative, setFiscalRepresentative] = useState('0');
+  const [permanentEstablishment, setPermanentEstablishment] = useState('');
+
+  // Base2
+  const [gender, setGender] = useState('N/A');
+  const [birthDate, setBirthDate] = useState('');
+  const [birthCountry, setBirthCountry] = useState('');
+  const [nationality, setNationality] = useState('');
+
+  // Address
+  const [country, setCountry] = useState('ID - INDONESIA'); // *Mandatory
+  const [transportZone, setTransportZone] = useState('');
+  const [phoneNo, setPhoneNo] = useState('+62 22 7564 8899');
+  const [faxNo, setFaxNo] = useState('');
+
+  // Contact Book
+  const [personToContact, setPersonToContact] = useState('Bpk. Hendra Gunawan');
+  const [positionInCompany, setPositionInCompany] = useState('Procurement Manager');
+  const [contactPhone, setContactPhone] = useState('+62 812 3456 7890');
+  const [contactFax, setContactFax] = useState('');
+  const [contactEmail, setContactEmail] = useState('purchasing@bojongsantos.co.id');
+  const [salutation, setSalutation] = useState('Mr');
+
+  // Process Finder Search input (Step 0)
+  const [searchFinderInput, setSearchFinderInput] = useState('Business Partner');
+
+  // Save State
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedBpId, setSavedBpId] = useState<string | null>(null);
+
+  const currentStep = module.steps[activeStepIndex] || module.steps[0];
+
   const handleSaveBP = () => {
-    const newId = 'BP-18573';
-    setGeneratedBpId(newId);
+    setSavedBpId('18573');
     setIsSaved(true);
+    onStepChange(5); // Jump to Save confirmation step
+  };
+
+  const handleNextStep = () => {
+    if (activeStepIndex < module.steps.length - 1) {
+      onStepChange(activeStepIndex + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (activeStepIndex > 0) {
+      onStepChange(activeStepIndex - 1);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* Module Title Banner & Document Citation */}
+      {/* Dynamic Module Header Card synced with active step */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-lg">
         <div className="space-y-2 max-w-2xl">
           <div className="flex items-center gap-2 flex-wrap">
@@ -137,8 +159,13 @@ export const ModuleBPInteractive: React.FC<ModuleBPInteractiveProps> = ({
             </span>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            {currentStep.stepNumber}. {currentStep.title}
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <span>{currentStep.stepNumber}. {currentStep.title}</span>
+            {currentStep.requiredFields && currentStep.requiredFields.length > 0 && (
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-red-500/15 text-red-400 border border-red-500/30 font-bold">
+                Mandatory Fields (*)
+              </span>
+            )}
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-xs text-slate-300">
@@ -152,20 +179,20 @@ export const ModuleBPInteractive: React.FC<ModuleBPInteractiveProps> = ({
           </div>
         </div>
 
-        {/* Action Button: Single line, well proportioned */}
+        {/* Step Navigation Controls (Prev / Next Step) */}
         <div className="flex items-center gap-2 shrink-0">
           {activeStepIndex > 0 && (
             <button
-              onClick={() => onStepChange(activeStepIndex - 1)}
+              onClick={handlePrevStep}
               className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer border border-slate-700/60"
             >
-              ← Sebelumnya
+              ← Step Sebelumnya
             </button>
           )}
 
           {activeStepIndex < module.steps.length - 1 ? (
             <button
-              onClick={() => onStepChange(activeStepIndex + 1)}
+              onClick={handleNextStep}
               className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition cursor-pointer flex items-center gap-2 whitespace-nowrap"
             >
               <span>Lanjut ke Step {activeStepIndex + 2}</span>
@@ -183,451 +210,515 @@ export const ModuleBPInteractive: React.FC<ModuleBPInteractiveProps> = ({
         </div>
       </div>
 
-      {/* Simulator Workspace: Dynamic based on active sub-step */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        {/* Step 1: Process Finder Simulation */}
-        {activeStepIndex === 0 && (
-          <div className="space-y-6 py-2">
-            <div className="max-w-2xl mx-auto text-center space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/15 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/30 shadow-lg">
-                <Search className="w-6 h-6" />
+      {/* STEP 0: Process Finder Simulation View */}
+      {activeStepIndex === 0 && (
+        <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+          <div className="max-w-2xl mx-auto text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600/15 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/30 shadow-lg">
+              <Search className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-white">Simulasi Process Finder Datatex NOW</h3>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-lg mx-auto">
+                Ketik <strong>"Business Partner"</strong> lalu klik tombol <strong>"+ New Partner"</strong> di pojok kiri atas untuk membuka form master rekanan.
+              </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-4 text-left shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <button
+                  onClick={() => onStepChange(1)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 transition cursor-pointer ring-2 ring-blue-400/40 animate-pulse"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ New Partner</span>
+                </button>
+                <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                  Process Finder Toolbar
+                </span>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">Simulasi Process Finder Datatex NOW</h3>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-lg mx-auto">
-                  Di Datatex NOW, seluruh modul dan form dicari melalui toolbar <strong>Process Finder</strong> di pojok kiri atas aplikasi.
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Ketik nama modul di Process Finder:
+                </label>
+                <div className="flex items-center gap-3 bg-slate-950 border border-blue-500/50 rounded-xl px-4 py-2.5">
+                  <Search className="w-4 h-4 text-blue-400 shrink-0" />
+                  <input
+                    type="text"
+                    value={searchFinderInput}
+                    onChange={(e) => setSearchFinderInput(e.target.value)}
+                    className="bg-transparent text-sm text-white font-mono font-semibold w-full focus:outline-none"
+                  />
+                  <span className="text-[10px] font-mono bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded shrink-0 border border-blue-500/30">
+                    Found 1 Collection
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-800">
+                <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Hasil: Collection Business Partner siap dibuka
+                </span>
+                <button
+                  onClick={() => onStepChange(1)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>Buka Form Cue Card Base →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEPS 1 s/d 5: Datatex NOW Master Window with Live Tab Synchronization */}
+      {activeStepIndex > 0 && (
+        <div className="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+          {/* Datatex Top Window Bar */}
+          <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center justify-between text-xs text-slate-300">
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-white flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-blue-400" />
+                Business partner | Business partners
+              </span>
+              <span className="text-slate-400">Other functions ▾</span>
+              <span className="text-blue-400 font-mono">AddressGST</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveBP}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow transition cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save</span>
+              </button>
+              <span className="text-slate-400 font-mono text-[11px] hidden sm:inline">
+                Licensed to : PT Gistex
+              </span>
+            </div>
+          </div>
+
+          {/* Form Body: Left Collection List + Right Tab Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 min-h-[500px]">
+            {/* Left Column: Recent Collection Table */}
+            <div className="border-b lg:border-b-0 lg:border-r border-slate-800 bg-slate-950 p-3 space-y-3">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Search name
+              </div>
+              <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg text-xs">
+                <Search className="w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  readOnly
+                  value="bojongsantos"
+                  className="bg-transparent text-slate-200 text-xs w-full focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="pt-2">
+                <div className="text-[10px] text-slate-400 uppercase font-mono mb-1">Recent Collection:</div>
+                <div className="p-2.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-xs text-blue-200 flex flex-col gap-0.5">
+                  <span className="font-mono font-bold text-white">BOJONGSANTOS</span>
+                  <span className="text-[11px] text-slate-300">PT. Bojongsantos</span>
+                </div>
+              </div>
+
+              {/* Contextual Guidance Callout */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                <div className="font-bold text-slate-200 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-400" /> Tips Navigasi:
+                </div>
+                <p>
+                  Klik tab di atas (<strong>Base</strong>, <strong>Base2</strong>, <strong>Address</strong>, <strong>Contact book</strong>) untuk berpindah langsung ke langkah form yang diinginkan.
                 </p>
               </div>
+            </div>
 
-              {/* Datatex Style Process Finder Mockup Window */}
-              <div className="bg-slate-950 border border-slate-700/80 rounded-2xl p-4 text-left shadow-2xl relative space-y-4">
-                {/* Header bar of process finder */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <div className="flex items-center gap-2">
-                    {/* The '+' button placed prominent at the top-left */}
+            {/* Right Column: Tab View */}
+            <div className="lg:col-span-3 p-5 space-y-5 bg-slate-900/40">
+              {/* Tabs Bar */}
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-2 flex-wrap">
+                {(['Base', 'Base2', 'Address', 'Contact book'] as const).map((tab) => {
+                  const isActive = activeTab === tab;
+                  return (
                     <button
-                      onClick={() => onStepChange(1)}
-                      title="Klik tombol New untuk buat Partner baru"
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md ${
-                        isTypingDone
-                          ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30 ring-2 ring-blue-400/40 animate-pulse'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      key={tab}
+                      onClick={() => handleSelectTab(tab)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400/40'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                       }`}
                     >
-                      <PlusCircle className="w-4 h-4 text-white" />
-                      <span>+ New Partner</span>
+                      <span>{tab}</span>
+                      {(tab === 'Base' || tab === 'Address') && (
+                        <span className="text-red-400 font-black">*</span>
+                      )}
                     </button>
-                    <span className="text-[11px] text-slate-400 hidden sm:inline">
-                      (Klik tombol <strong className="text-blue-300">+</strong> di pojok kiri atas untuk membuat baru)
-                    </span>
-                  </div>
+                  );
+                })}
+              </div>
 
-                  <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                    Datatex Process Finder v2026
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    Ketik nama modul di Process Finder:
-                  </label>
-                  <div className="flex items-center gap-3 bg-slate-900 border border-blue-500/50 rounded-xl px-4 py-2.5">
-                    <Search className="w-4 h-4 text-blue-400 shrink-0" />
-                    <div className="flex items-center w-full font-semibold text-sm text-white font-mono">
-                      <span>{typedSearchText}</span>
-                      <span className="w-2 h-4 bg-blue-400 ml-0.5 animate-pulse inline-block" />
+              {/* TAB 1: BASE */}
+              {activeTab === 'Base' && (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 items-center">
+                    <label className="text-slate-400">Number id</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={numberId}
+                        className="bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-400 font-mono w-44"
+                      />
                     </div>
-                    {isTypingDone && (
-                      <span className="text-[10px] font-mono bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded shrink-0 animate-fade-in border border-blue-500/30">
-                        Found 1 Collection
+
+                    <label className="text-slate-300">Origin information type</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={originInfoType}
+                        onChange={(e) => setOriginInfoType(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64 focus:border-blue-500 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">End date</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-44"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Substitute</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={substitute}
+                        onChange={(e) => setSubstitute(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-44 font-mono"
+                      />
+                    </div>
+
+                    {/* *Legal Name (MANDATORY) */}
+                    <label className="text-white font-bold flex items-center gap-1">
+                      <span className="text-red-400 font-black">*</span>
+                      <span>Legal Name</span>
+                    </label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={legalName}
+                        onChange={(e) => setLegalName(e.target.value)}
+                        className="bg-blue-950/30 border border-blue-500/70 rounded-lg px-3 py-1.5 text-white font-semibold w-full max-w-lg focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Legal surname</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={legalSurname}
+                        onChange={(e) => setLegalSurname(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">Short name</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={shortName}
+                        onChange={(e) => setShortName(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Search name</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={searchName}
+                        onChange={(e) => setSearchName(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Group</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={group}
+                        onChange={(e) => setGroup(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-44 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Is sundry</label>
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isSundry}
+                        onChange={(e) => setIsSundry(e.target.checked)}
+                        className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-blue-600 focus:ring-0"
+                      />
+                      <span className="text-[11px] text-slate-400">Check jika customer non-reguler</span>
+                    </div>
+
+                    {/* *Fiscal type (MANDATORY) */}
+                    <label className="text-white font-bold flex items-center gap-1">
+                      <span className="text-red-400 font-black">*</span>
+                      <span>Fiscal type</span>
+                    </label>
+                    <div className="md:col-span-2">
+                      <select
+                        value={fiscalType}
+                        onChange={(e) => setFiscalType(e.target.value)}
+                        className="bg-blue-950/30 border border-blue-500/70 rounded-lg px-3 py-1.5 text-white w-52 focus:outline-none"
+                      >
+                        <option value="01">01 - Standar PKP</option>
+                        <option value="02">02 - Non PKP</option>
+                        <option value="03">03 - Kawasan Berikat</option>
+                      </select>
+                    </div>
+
+                    {/* *Fiscal code (MANDATORY) */}
+                    <label className="text-white font-bold flex items-center gap-1">
+                      <span className="text-red-400 font-black">*</span>
+                      <span>Fiscal code</span>
+                    </label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={fiscalCode}
+                        onChange={(e) => setFiscalCode(e.target.value)}
+                        className="bg-blue-950/30 border border-blue-500/70 rounded-lg px-3 py-1.5 text-white font-mono w-64 focus:outline-none"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">Tax registration number</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={taxRegNo}
+                        onChange={(e) => setTaxRegNo(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">EORI Code</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={eoriCode}
+                        onChange={(e) => setEoriCode(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: BASE2 */}
+              {activeTab === 'Base2' && (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 items-center">
+                    <label className="text-slate-400">Gender</label>
+                    <div className="md:col-span-2">
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-44"
+                      >
+                        <option value="N/A">N/A</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+
+                    <label className="text-slate-400">Birth date</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="date"
+                        value={birthDate}
+                        onChange={(e) => setBirthDate(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-44"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Birth country</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        placeholder="Pilih negara..."
+                        value={birthCountry}
+                        onChange={(e) => setBirthCountry(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Nationality</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        placeholder="Kewarganegaraan..."
+                        value={nationality}
+                        onChange={(e) => setNationality(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: ADDRESS */}
+              {activeTab === 'Address' && (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 items-center">
+                    {/* *Country (MANDATORY) */}
+                    <label className="text-white font-bold flex items-center gap-1">
+                      <span className="text-red-400 font-black">*</span>
+                      <span>Country</span>
+                    </label>
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="bg-blue-950/30 border border-blue-500/70 rounded-lg px-3 py-1.5 text-white w-64 focus:outline-none"
+                      >
+                        <option value="ID - INDONESIA">ID - INDONESIA</option>
+                        <option value="US - UNITED STATES">US - UNITED STATES</option>
+                        <option value="SG - SINGAPORE">SG - SINGAPORE</option>
+                      </select>
+                      <span className="text-red-400 text-xs font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> Wajib
                       </span>
-                    )}
+                    </div>
+
+                    <label className="text-slate-400">Transport zone</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={transportZone}
+                        onChange={(e) => setTransportZone(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">Phone number</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={phoneNo}
+                        onChange={(e) => setPhoneNo(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Fax number</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={faxNo}
+                        onChange={(e) => setFaxNo(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64 font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
+              )}
 
-                <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-800/80">
-                  <span className="text-slate-400">
-                    {isTypingDone ? (
-                      <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Hasil: Collection Business Partner siap dibuka
-                      </span>
-                    ) : (
-                      'Mencari modul di sistem Datatex NOW...'
-                    )}
+              {/* TAB 4: CONTACT BOOK */}
+              {activeTab === 'Contact book' && (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 items-center">
+                    <label className="text-slate-300">Person to contact</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={personToContact}
+                        onChange={(e) => setPersonToContact(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">Position in the company</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={positionInCompany}
+                        onChange={(e) => setPositionInCompany(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">Phone number</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-64 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Fax number</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={contactFax}
+                        onChange={(e) => setContactFax(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 w-64 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-300">@ mail</label>
+                    <div className="md:col-span-2">
+                      <input
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-72 font-mono"
+                      />
+                    </div>
+
+                    <label className="text-slate-400">Ms/Mrs/Mr</label>
+                    <div className="md:col-span-2">
+                      <select
+                        value={salutation}
+                        onChange={(e) => setSalutation(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white w-32"
+                      >
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Ms">Ms</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Saved Notification */}
+              {isSaved && (
+                <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-between text-xs text-emerald-300 animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>
+                      Business Partner berhasil disimpan! Nomor ID Terbit: <strong>BP-{savedBpId}</strong>
+                    </span>
+                  </div>
+                  <span className="font-mono bg-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+                    DATA OK
                   </span>
-
-                  <button
-                    onClick={() => onStepChange(1)}
-                    className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <span>Buka Form</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Cue Card Base */}
-        {activeStepIndex === 1 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-400" />
-                <h3 className="text-base font-bold text-white">Cue Card: Base (Identitas Legal Partner)</h3>
-              </div>
-              <span className="text-xs text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-md border border-amber-400/20 font-mono">
-                Wajib Lengkap untuk Pajak
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Origin Info Type *</label>
-                <input
-                  type="text"
-                  value={originInfo}
-                  onChange={(e) => setOriginInfo(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
-                />
-              </div>
-
-              <div className="space-y-1.5 lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-300">Legal Registered Name *</label>
-                <input
-                  type="text"
-                  value={legalName}
-                  onChange={(e) => setLegalName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Short Name *</label>
-                <input
-                  type="text"
-                  value={shortName}
-                  onChange={(e) => setShortName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Fiscal Type (Default 01) *</label>
-                <select
-                  value={fiscalType}
-                  onChange={(e) => setFiscalType(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
-                >
-                  <option value="01">01 - Standar Fiskal / PKP</option>
-                  <option value="02">02 - Non PKP</option>
-                  <option value="03">03 - Kawasan Berikat</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                <label className="text-xs font-bold text-amber-300 flex items-center justify-between">
-                  <span>Tax Reg. Number (NPWP 16 Digit) *</span>
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                </label>
-                <input
-                  type="text"
-                  value={taxRegNo}
-                  onChange={(e) => setTaxRegNo(e.target.value)}
-                  className="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-3.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-amber-400 font-mono"
-                />
-                <span className="text-[10px] text-amber-400/80">Wajib untuk e-Faktur PT Gistex</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-900/60 text-xs text-blue-200 flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Catatan User Manual:</strong> Jika nama partner berubah di kemudian hari, jangan ubah data master ini secara sembarangan. Buat BP baru dengan nama baru, buka BP lama, isi <code>End Date</code>, lalu pilih BP baru di field <code>Substitute</code>.
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Cue Card Address */}
-        {activeStepIndex === 2 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-bold text-white">Cue Card: Address (Alamat Legal Penagihan)</h3>
-              </div>
-              <span className="text-xs text-slate-400 font-mono">Invoice Address Reference</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Country *</label>
-                <input
-                  type="text"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Plot Number / No. Kavling</label>
-                <input
-                  type="text"
-                  value={plotNumber}
-                  onChange={(e) => setPlotNumber(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Street / Area *</label>
-                <input
-                  type="text"
-                  value={streetArea}
-                  onChange={(e) => setStreetArea(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5 lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-300">Address 1 (Detail Gedung/Blok) *</label>
-                <input
-                  type="text"
-                  value={address1}
-                  onChange={(e) => setAddress1(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">District / Kota *</label>
-                <input
-                  type="text"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Phone Number *</label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 font-mono"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Contact Book */}
-        {activeStepIndex === 3 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Cue Card: Contact Book (Daftar PIC Rekanan)</h3>
-              </div>
-              <span className="text-xs text-slate-400">Multiple PICs Supported</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Person to Contact *</label>
-                <input
-                  type="text"
-                  value={contactPerson}
-                  onChange={(e) => setContactPerson(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Position / Job Role</label>
-                <input
-                  type="text"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Contact Number *</label>
-                <input
-                  type="text"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 font-mono"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Email ID *</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-200 font-mono"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Delivery Points */}
-        {activeStepIndex === 4 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-bold text-white">Other Functions: Alamat Pengiriman (Delivery Point)</h3>
-              </div>
-              <span className="text-xs text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-md border border-amber-400/20">
-                Pabrik / Gudang Kirim Pembeli
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-400">
-              Gunakan fungsi ini jika alamat fisik pengiriman barang (misalnya pabrik garmen rekanan) berbeda dari alamat kantor faktur/NPWP.
-            </p>
-
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Kode Unik Delivery Point *</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: DEL-02-CIMAHI"
-                    value={deliveryCode}
-                    onChange={(e) => setDeliveryCode(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Addressee / Nama Lokasi Gudang *</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: Pabrik Sewing Unit 3"
-                    value={deliveryAddressee}
-                    onChange={(e) => setDeliveryAddressee(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleAddDeliveryPoint}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer flex items-center gap-2"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-blue-400" />
-                <span>Simpan Delivery Point Tambahan</span>
-              </button>
-            </div>
-
-            {/* List of registered delivery points */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Daftar Delivery Point Terdaftar:
-              </label>
-              <div className="space-y-2">
-                {deliveryPoints.map((dp, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300">
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-emerald-400" />
-                      <span>{dp}</span>
-                    </div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
-                      Active
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 6: Save & Generate ID */}
-        {activeStepIndex === 5 && (
-          <div className="space-y-6 py-4 text-center">
-            <div className="max-w-lg mx-auto space-y-4">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30 shadow-xl shadow-emerald-500/10">
-                <FileBadge className="w-8 h-8" />
-              </div>
-
-              <h3 className="text-2xl font-black text-white">Menyimpan & Menerbitkan BP ID</h3>
-              <p className="text-sm text-slate-400">
-                Setelah seluruh cue card Base, Address, Contact Book, dan Delivery Point terisi, klik tombol Save di toolbar atas.
-              </p>
-
-              {!isSaved ? (
-                <div className="pt-2">
-                  <button
-                    onClick={handleSaveBP}
-                    className="flex items-center justify-center gap-2.5 mx-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-xl shadow-blue-600/30 cursor-pointer transition text-sm"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Klik Toolbar: Simpan Business Partner</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-left space-y-3 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                      ✔ Business Partner Berhasil Disimpan!
-                    </span>
-                    <span className="text-xs text-emerald-300 font-mono">System Generated</span>
-                  </div>
-
-                  <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/30 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] text-slate-400">Nomor Master BP ID:</div>
-                      <div className="text-xl font-black text-emerald-400 font-mono">{generatedBpId}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] text-slate-400">Legal Name:</div>
-                      <div className="text-xs font-bold text-white">{legalName}</div>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    BP ID <strong>{generatedBpId}</strong> kini tersimpan di database Datatex NOW. Nomor ini akan kita gunakan untuk membuat akun komersial di <strong>Modul 02: Order Partner (OP Customer)</strong>.
-                  </p>
                 </div>
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Presentation Spotlightprompter bar */}
-      {isPresentation && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 backdrop-blur-md">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-              Naskah Presenter • Step {currentStep.stepNumber} dari {module.steps.length}
-            </span>
-          </div>
-          <p className="text-sm text-slate-200 leading-relaxed font-medium">
-            "{currentStep.presentationNarrative}"
-          </p>
-          {currentStep.tips.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-amber-500/20">
-              {currentStep.tips.map((t, idx) => (
-                <span key={idx} className="text-[11px] text-amber-300">
-                  💡 {t}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>

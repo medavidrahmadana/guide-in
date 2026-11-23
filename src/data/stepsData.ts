@@ -14,81 +14,81 @@ export const TRAINING_MODULES: TrainingModule[] = [
       {
         stepId: 'bp-step-1',
         stepNumber: 1,
-        title: 'Buka Menu & Buat Baru',
-        cueCardName: 'Process Finder → Business Partner',
-        summary: 'Navigasi ke menu Process Finder, ketik "Business Partner", buka collection partner, lalu klik tombol "New".',
+        title: 'Process Finder & Buat Baru',
+        cueCardName: 'Process Finder → New Partner',
+        summary: 'Cari modul Business Partner di Process Finder, buka collection, lalu klik tombol "+ New Partner".',
         requiredFields: [],
         tips: [
           'Process Finder adalah kotak pencarian modul global di Datatex NOW.',
-          'Klik New untuk membuka form pendaftaran partner baru.'
+          'Klik New Partner untuk membuka form master entitas legal baru.'
         ],
-        presentationNarrative: 'Selamat datang di Pelatihan Modul 1. Langkah pertama adalah membuka Process Finder, cari "Business Partner", lalu klik tombol "New" untuk membuat entitas rekanan baru.'
+        presentationNarrative: 'Langkah pertama adalah membuka Process Finder, cari "Business Partner", lalu klik tombol "+ New Partner" untuk membuka form pendaftaran baru.'
       },
       {
         stepId: 'bp-step-2',
         stepNumber: 2,
-        title: 'Cue Card Base: Identitas & NPWP',
-        cueCardName: 'Cue Card Base',
-        summary: 'Mengisi Origin Info Type, Legal Name, Short Name, Fiscal Type (Default 01), dan Tax Registration Number (NPWP 16 digit).',
-        requiredFields: ['Origin Info Type', 'Legal Name', 'Short Name', 'Fiscal Type', 'Tax Registration Number'],
+        title: 'Cue Card: Base',
+        cueCardName: 'Base (Identitas Legal & Pajak)',
+        summary: 'Mengisi data legal: *Legal Name, Short name, *Fiscal type (Default 01), dan *Fiscal code (NPWP).',
+        requiredFields: ['*Legal Name', '*Fiscal type', '*Fiscal code'],
         tips: [
-          'Fiscal Type default adalah 01 (PKP/Pajak Standar).',
-          'Tax Registration Number (NPWP) wajib sinkron dengan e-Faktur Pajak.',
-          'Jika ada pergantian nama partner, gunakan field End Date dan pilih Substitute partner baru.'
+          '*Legal Name, *Fiscal type, dan *Fiscal code adalah kolom MANDATORY (Wajib diisi).',
+          'Fiscal type default bernilai 01 (Standar PKP).',
+          'Jika ada pergantian nama partner lama, gunakan field End date dan pilih Substitute partner baru.'
         ],
-        presentationNarrative: 'Pada Cue Card Base, masukkan identitas legal resmi rekanan. Pastikan Legal Name lengkap dan Tax Registration Number (NPWP) benar. Fiscal Type default bernilai 01.'
+        presentationNarrative: 'Pada tab Base, lengkapi field Mandatory: *Legal Name, *Fiscal type (01), dan *Fiscal code (NPWP 16 digit).'
       },
       {
         stepId: 'bp-step-3',
         stepNumber: 3,
-        title: 'Cue Card Address: Alamat Legal',
-        cueCardName: 'Cue Card Address',
-        summary: 'Melengkapi Country, Plot Number, Street/Area, Address 1, District, serta nomor Telepon dan Fax resmi rekanan.',
-        requiredFields: ['Country', 'Street/Area', 'Address 1', 'District', 'Phone Number'],
+        title: 'Cue Card: Base2',
+        cueCardName: 'Base2 (Biodata / Natural Person)',
+        summary: 'Melengkapi informasi opsional seperti Gender (N/A), Birth date, Birth country, dan Nationality.',
+        requiredFields: [],
         tips: [
-          'Alamat di cue card ini adalah alamat legal faktur pajak.',
-          'Format penulisan alamat sebaiknya standar dan jelas.'
+          'Tab Base2 digunakan jika rekanan bisnis merupakan individu perorangan (Natural Person).',
+          'Untuk badan usaha berbadan hukum (PT/CV), field ini dapat dibiarkan default N/A.'
         ],
-        presentationNarrative: 'Lanjut ke tab/cue card Address. Isi alamat legal kantor rekanan sesuai domisili perpajakan, mulai dari negara, jalan, distrik, hingga nomor telepon.'
+        presentationNarrative: 'Lanjut ke tab Base2 untuk pengisian data pelengkap individu jika partner merupakan perorangan, atau biarkan default N/A.'
       },
       {
         stepId: 'bp-step-4',
         stepNumber: 4,
-        title: 'Cue Card Contact Book: PIC Rekanan',
-        cueCardName: 'Cue Card Contact Book',
-        summary: 'Menambahkan daftar kontak person: Person to Contact, Position/Job Role, Contact Number, dan Email ID.',
-        requiredFields: ['Person to Contact', 'Contact Number', 'Email ID'],
+        title: 'Cue Card: Address',
+        cueCardName: 'Address (Alamat Kantor & *Country)',
+        summary: 'Memilih *Country (Mandatory), Transport zone, Phone number, dan Fax number.',
+        requiredFields: ['*Country'],
         tips: [
-          'Dapat menambahkan lebih dari 1 kontak jika diperlukan (misal PIC Purchasing dan Finance).',
-          'Email ini akan digunakan untuk pengiriman dokumen atau konfirmasi PO.'
+          '*Country wajib diisi! Sistem akan menolak simpan jika Country kosong.',
+          'Format penulisan nomor telepon wajib menyertakan kode area/negara.'
         ],
-        presentationNarrative: 'Di Contact Book, daftarkan Person in Charge (PIC) utama rekanan, jabatan, nomor seluler, serta alamat email korespondensi.'
+        presentationNarrative: 'Pada tab Address, *Country wajib dipilih (misal ID - INDONESIA) agar zona pengiriman dan perpajakan terdefinisi.'
       },
       {
         stepId: 'bp-step-5',
         stepNumber: 5,
-        title: 'Alamat Pengiriman (Delivery Point)',
-        cueCardName: 'Other Functions → Delivery Address',
-        summary: 'Menambahkan titik alamat kirim (Delivery Point) jika pabrik/gudang kirim pembeli berbeda dari alamat legal penagihan.',
-        requiredFields: ['Address Type', 'Code', 'Addressee', 'Country'],
+        title: 'Cue Card: Contact book',
+        cueCardName: 'Contact book (PIC & Document Mail)',
+        summary: 'Mendaftarkan PIC (Person to contact, Position, Phone, Email) dan dokumen mail otomatis.',
+        requiredFields: [],
         tips: [
-          'Buka dari menu "Other Functions" → Delivery Address → klik "New".',
-          'Berikan Code yang unik untuk tiap lokasi gudang/pabrik customer.'
+          'Pilih jenis dokumen (Sales open order, Sales order) yang akan otomatis dikirimkan via email ke PIC.',
+          'Bisa menambahkan lebih dari 1 kontak jika diperlukan.'
         ],
-        presentationNarrative: 'Jika customer memiliki gudang atau pabrik tujuan pengiriman yang berbeda dengan alamat kantor faktur, tambahkan Delivery Point melalui Other Functions.'
+        presentationNarrative: 'Di Contact book, daftarkan PIC dan tentukan dokumen apa saja yang akan otomatis terkirim via email ke PIC rekanan.'
       },
       {
         stepId: 'bp-step-6',
         stepNumber: 6,
-        title: 'Simpan & Dapatkan BP ID',
-        cueCardName: 'Save & Generate ID',
-        summary: 'Klik tombol Save di toolbar atas. Sistem Datatex NOW akan menerbitkan nomor BP ID secara otomatis (contoh: 18573).',
+        title: 'Simpan & Generate BP ID',
+        cueCardName: 'Toolbar Save & ID Assignment',
+        summary: 'Klik tombol Save di toolbar atas. Sistem menerbitkan nomor ID BP otomatis (contoh: BP-18573).',
         requiredFields: [],
         tips: [
-          'Catat BP ID yang dihasilkan untuk digunakan saat membuat Order Partner.',
-          'Partner baru kini muncul di Collection Business Partner.'
+          'Catat BP ID yang terbit untuk digunakan pada modul berikutnya (Order Partner).',
+          'Status data kini tersimpan dan siap divalidasi tim komersial.'
         ],
-        presentationNarrative: 'Terakhir, klik Save. Sistem Datatex NOW otomatis men-generate BP ID unik. Modul Business Partner selesai dan siap ditautkan ke Order Partner!'
+        presentationNarrative: 'Terakhir, klik tombol Save di toolbar atas. Sistem Datatex NOW akan memvalidasi field mandatory dan menerbitkan BP ID otomatis.'
       }
     ]
   },

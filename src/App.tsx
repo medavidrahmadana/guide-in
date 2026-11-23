@@ -5,19 +5,18 @@ import { Header } from './components/navigation/Header';
 import { ModuleNavigation } from './components/navigation/ModuleNavigation';
 import { LandingPage } from './components/landing/LandingPage';
 import { WorkflowView } from './components/steps/WorkflowView';
-import { SpotlightOverlay } from './components/presentation/SpotlightOverlay';
+import { PresentationBPTour } from './components/presentation/PresentationBPTour';
 import { loadStoredProgress, saveStoredProgress } from './utils/storage';
 
 export function App() {
-  const [mode, setMode] = useState<AppMode>('landing');
-  
   // Learning State loaded directly from persistent device storage
   const [storedData] = useState(() => loadStoredProgress());
+  const [mode, setMode] = useState<AppMode>(storedData.lastMode || 'landing');
   const [unlockedModules, setUnlockedModules] = useState<ModuleId[]>(storedData.unlockedModules);
   const [completedModules, setCompletedModules] = useState<ModuleId[]>(storedData.completedModules);
   const [activeModuleId, setActiveModuleId] = useState<ModuleId>(storedData.lastActiveModuleId);
   const [moduleStepIndices, setModuleStepIndices] = useState<Record<ModuleId, number>>({
-    'business-partner': 0,
+    'business-partner': storedData.lastStepIndex || 0,
     'order-partner': 0,
     'open-order': 0,
     'order-evolution': 0,
@@ -32,6 +31,25 @@ export function App() {
   const handleStartWorkflow = (moduleId: ModuleId, chosenMode: 'sandbox' | 'presentation') => {
     setActiveModuleId(moduleId);
     setMode(chosenMode);
+    saveStoredProgress({
+      lastActiveModuleId: moduleId,
+      lastMode: chosenMode,
+      lastStepIndex: moduleStepIndices[moduleId] || 0,
+    });
+  };
+
+  const handleChangeMode = (newMode: AppMode) => {
+    setMode(newMode);
+    saveStoredProgress({
+      lastMode: newMode,
+    });
+  };
+
+  const handleGoHome = () => {
+    setMode('landing');
+    saveStoredProgress({
+      lastMode: 'landing',
+    });
   };
 
   const handleStepChange = (index: number) => {
@@ -39,6 +57,10 @@ export function App() {
       ...prev,
       [activeModuleId]: index,
     }));
+    saveStoredProgress({
+      lastActiveModuleId: activeModuleId,
+      lastStepIndex: index,
+    });
   };
 
   // Complete a module, mark it finished, and unlock the next module!
@@ -111,12 +133,34 @@ export function App() {
     );
   }
 
+  // DEDICATED PRESENTATION TOUR MODE (Read-only, interactive speech bubbles, auto-typing, evaluation flow)
+  if (mode === 'presentation' && activeModuleId === 'business-partner') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+        <Header
+          mode={mode}
+          onChangeMode={handleChangeMode}
+          onGoHome={handleGoHome}
+        />
+        <PresentationBPTour
+          module={currentModule}
+          onExitPresentation={() => handleChangeMode('sandbox')}
+          onCompleteAndUnlockNext={() => {
+            handleCompleteModule('business-partner');
+            handleChangeMode('sandbox');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // STANDARD SANDBOX MODE (Free interaction, form editing, etc.)
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Header
         mode={mode}
-        onChangeMode={(newMode) => setMode(newMode)}
-        onGoHome={() => setMode('landing')}
+        onChangeMode={handleChangeMode}
+        onGoHome={handleGoHome}
       />
 
       <ModuleNavigation
@@ -124,38 +168,23 @@ export function App() {
         activeStepIndex={activeStepIndex}
         unlockedModules={unlockedModules}
         completedModules={completedModules}
-        onSelectModule={(id) => setActiveModuleId(id)}
+        onSelectModule={(id) => {
+          setActiveModuleId(id);
+          saveStoredProgress({ lastActiveModuleId: id });
+        }}
         onSelectStep={handleStepChange}
       />
 
       <main className="flex-1">
-        <SpotlightOverlay
-          active={mode === 'presentation'}
-          narrative={currentStep.presentationNarrative}
-          tips={currentStep.tips}
-          stepIndex={activeStepIndex + 1}
-          totalSteps={currentModule.steps.length}
-          onNext={() => {
-            if (activeStepIndex < currentModule.steps.length - 1) {
-              handleStepChange(activeStepIndex + 1);
-            }
-          }}
-          onPrev={() => {
-            if (activeStepIndex > 0) {
-              handleStepChange(activeStepIndex - 1);
-            }
-          }}
-        >
-          <WorkflowView
-            activeModuleId={activeModuleId}
-            activeStepIndex={activeStepIndex}
-            unlockedModules={unlockedModules}
-            isPresentation={mode === 'presentation'}
-            onStepChange={handleStepChange}
-            onSelectModule={(id) => setActiveModuleId(id)}
-            onCompleteModule={handleCompleteModule}
-          />
-        </SpotlightOverlay>
+        <WorkflowView
+          activeModuleId={activeModuleId}
+          activeStepIndex={activeStepIndex}
+          unlockedModules={unlockedModules}
+          isPresentation={false}
+          onStepChange={handleStepChange}
+          onSelectModule={(id) => setActiveModuleId(id)}
+          onCompleteModule={handleCompleteModule}
+        />
       </main>
     </div>
   );
