@@ -19,10 +19,10 @@ export const Header: React.FC<HeaderProps> = ({ mode, onChangeMode, onGoHome }) 
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-base tracking-tight text-white">Guide.In</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-              Datatex NOW
+              Based on Datatex NOW
             </span>
           </div>
-          <p className="text-[11px] text-slate-400">Sales Workflow Simulator • PT Gistex Indonesia</p>
+          <p className="text-[11px] text-slate-400">Sales Workflow Simulator • Dibuat Dengan Sepenuh Hati</p>
         </div>
       </div>
 
@@ -31,11 +31,10 @@ export const Header: React.FC<HeaderProps> = ({ mode, onChangeMode, onGoHome }) 
           <div className="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl">
             <button
               onClick={() => onChangeMode('sandbox')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                mode === 'sandbox'
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${mode === 'sandbox'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                   : 'text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               <Eye className="w-3.5 h-3.5" />
               <span>Sandbox Mode</span>
@@ -43,11 +42,10 @@ export const Header: React.FC<HeaderProps> = ({ mode, onChangeMode, onGoHome }) 
 
             <button
               onClick={() => onChangeMode('presentation')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                mode === 'presentation'
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${mode === 'presentation'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/30'
                   : 'text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               <PlayCircle className="w-3.5 h-3.5" />
               <span>Presentation Tour</span>

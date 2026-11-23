@@ -1,101 +1,88 @@
-import React, { useState } from 'react';
-import { WORKFLOW_STEPS } from '../../data/stepsData';
-import { WorkflowStepId } from '../../types/workflow';
-import { StepBusinessPartner } from './StepBusinessPartner';
-import { 
-  Building2, 
-  Users, 
-  FileText, 
-  GitFork, 
-  CheckCircle, 
-  PackageCheck,
-  ChevronRight,
-  Info
-} from 'lucide-react';
+import React from 'react';
+import { TRAINING_MODULES } from '../../data/stepsData';
+import { ModuleId } from '../../types/workflow';
+import { ModuleBPInteractive } from './ModuleBPInteractive';
+import { ModuleLockedPlaceholder } from './ModuleLockedPlaceholder';
+import { Users, FileText, GitFork, CheckCircle, PackageCheck, AlertCircle } from 'lucide-react';
 
 interface WorkflowViewProps {
-  currentStepId: WorkflowStepId;
+  activeModuleId: ModuleId;
+  activeStepIndex: number;
+  unlockedModules: ModuleId[];
   isPresentation?: boolean;
+  onStepChange: (index: number) => void;
+  onSelectModule: (moduleId: ModuleId) => void;
+  onCompleteModule: (moduleId: ModuleId) => void;
 }
 
-export const WorkflowView: React.FC<WorkflowViewProps> = ({ currentStepId, isPresentation }) => {
-  const step = WORKFLOW_STEPS.find((s) => s.id === currentStepId);
+export const WorkflowView: React.FC<WorkflowViewProps> = ({
+  activeModuleId,
+  activeStepIndex,
+  unlockedModules,
+  isPresentation,
+  onStepChange,
+  onSelectModule,
+  onCompleteModule,
+}) => {
+  const currentModuleIndex = TRAINING_MODULES.findIndex((m) => m.id === activeModuleId);
+  const currentModule = TRAINING_MODULES[currentModuleIndex] || TRAINING_MODULES[0];
+  const isUnlocked = unlockedModules.includes(activeModuleId);
+  const previousModule = currentModuleIndex > 0 ? TRAINING_MODULES[currentModuleIndex - 1] : TRAINING_MODULES[0];
 
-  const renderStepContent = () => {
-    switch (currentStepId) {
-      case 'business-partner':
-        return <StepBusinessPartner isPresentation={isPresentation} />;
-      case 'order-partner':
-        return (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Step 2: Order Partner (OP Customer)</h3>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              Modul penentuan akun komersial, setting Currency, toggle penting <code>Order Allowed [✓]</code>, dan <code>End Credit Date</code>.
-            </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300 font-mono">
-              Ready for Interactive Simulator Hook
-            </div>
-          </div>
-        );
-      case 'open-order':
-        return (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto">
-              <FileText className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Step 3: Open Order (Template 120)</h3>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              Booking kapasitas & greige kain (Design, Chop, GSM, Finish) dengan simulasi interaktif tombol panah <code>( → )</code> compile item code.
-            </p>
-          </div>
-        );
-      case 'order-evolution':
-        return (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
-              <GitFork className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Step 4: Order Evolution (120 ➔ 001)</h3>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              Header Evolution (Same vs Cross-Customer) & Line Evolution (Full Qty ➔ CLOSED, Partial Qty ➔ PRE.USED).
-            </p>
-          </div>
-        );
-      case 'confirm-order':
-        return (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Step 5: Confirm Order (Template 001)</h3>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              Penetapan kode warna / shade spesifik dan update status pesanan definitif.
-            </p>
-          </div>
-        );
-      case 'stock-picking':
-        return (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto">
-              <PackageCheck className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Step 6: Stock & Picking Simulation (Doc 09 & Doc 11)</h3>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              Alokasi stok kain gudang 311WFF01 dan alur Picking Creator (Doc 09) ke Picking Confirmation (Doc 11).
-            </p>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  // If module is locked, show educational lock screen
+  if (!isUnlocked) {
+    return (
+      <ModuleLockedPlaceholder
+        module={currentModule}
+        previousModule={previousModule}
+        isUnlocked={isUnlocked}
+        onGoToPrevious={() => onSelectModule(previousModule.id)}
+      />
+    );
+  }
 
+  // Active module is Business Partner (Module 1)
+  if (activeModuleId === 'business-partner') {
+    return (
+      <ModuleBPInteractive
+        module={currentModule}
+        activeStepIndex={activeStepIndex}
+        isPresentation={isPresentation}
+        onStepChange={onStepChange}
+        onCompleteModule={() => onCompleteModule('business-partner')}
+      />
+    );
+  }
+
+  // Module 2 s/d 6 (When unlocked)
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {renderStepContent()}
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mx-auto shadow-xl">
+          <Users className="w-8 h-8" />
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">
+          ✔ MODUL TERBUKA (UNLOCKED)
+        </div>
+        <h2 className="text-2xl font-black text-white">
+          Modul {currentModule.menuNumber}: {currentModule.title}
+        </h2>
+        <p className="text-sm text-slate-400 max-w-xl mx-auto">
+          {currentModule.description}
+        </p>
+        <p className="text-xs text-slate-400 font-mono">
+          Ref Dokumen: {currentModule.pdfDocRef}
+        </p>
+
+        <div className="pt-4 border-t border-slate-800 flex justify-center gap-3">
+          <button
+            onClick={() => onCompleteModule(activeModuleId)}
+            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition cursor-pointer"
+          >
+            Selesaikan Modul & Buka Modul Berikutnya →
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
