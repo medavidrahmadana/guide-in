@@ -1,192 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { ModuleId, AppMode } from './types/workflow';
-import { TRAINING_MODULES } from './data/stepsData';
-import { Header } from './components/navigation/Header';
-import { ModuleNavigation } from './components/navigation/ModuleNavigation';
-import { LandingPage } from './components/landing/LandingPage';
-import { WorkflowView } from './components/steps/WorkflowView';
-import { PresentationBPTour } from './components/presentation/PresentationBPTour';
-import { loadStoredProgress, saveStoredProgress } from './utils/storage';
+import React, { useState } from 'react';
+import { GlobalLandingHub } from './modules/templating-hub/GlobalLandingHub';
+import { GistexSalesApp } from './modules/gistex-sales/GistexSalesApp';
+import { TemplatingHubLanding } from './modules/templating-hub/TemplatingHubLanding';
+
+export type MainAppView = 'global-hub' | 'gistex-sales' | 'templating-hub';
 
 export function App() {
-  // Learning State loaded directly from persistent device storage
-  const [storedData] = useState(() => loadStoredProgress());
-  const [mode, setMode] = useState<AppMode>(storedData.lastMode || 'landing');
-  const [unlockedModules, setUnlockedModules] = useState<ModuleId[]>(storedData.unlockedModules);
-  const [completedModules, setCompletedModules] = useState<ModuleId[]>(storedData.completedModules);
-  const [activeModuleId, setActiveModuleId] = useState<ModuleId>(storedData.lastActiveModuleId);
-  const [moduleStepIndices, setModuleStepIndices] = useState<Record<ModuleId, number>>({
-    'business-partner': storedData.lastStepIndex || 0,
-    'order-partner': 0,
-    'open-order': 0,
-    'order-evolution': 0,
-    'confirm-order': 0,
-    'stock-picking': 0,
+  // Main view routing between 3 Landing Hubs:
+  // 1. 'global-hub'     : Landing Utama Guide.In (2 Pilihan: Datatex Gistex vs Buat Template Demo)
+  // 2. 'gistex-sales'   : Landing Modul Sales ERP Datatex (Project Lama Aman 100%)
+  // 3. 'templating-hub' : Landing Templating & Interactive Studio (Fitur Baru)
+  const [currentView, setCurrentView] = useState<MainAppView>(() => {
+    // Check if user previously in gistex-sales view in localStorage
+    try {
+      const saved = localStorage.getItem('guide_in_main_view');
+      if (saved === 'gistex-sales' || saved === 'templating-hub') return saved;
+    } catch (e) {}
+    return 'global-hub';
   });
 
-  const currentModule = TRAINING_MODULES.find((m) => m.id === activeModuleId) || TRAINING_MODULES[0];
-  const activeStepIndex = moduleStepIndices[activeModuleId] || 0;
-  const currentStep = currentModule.steps[activeStepIndex] || currentModule.steps[0];
-
-  const handleStartWorkflow = (moduleId: ModuleId, chosenMode: 'sandbox' | 'presentation') => {
-    setActiveModuleId(moduleId);
-    setMode(chosenMode);
-    saveStoredProgress({
-      lastActiveModuleId: moduleId,
-      lastMode: chosenMode,
-      lastStepIndex: moduleStepIndices[moduleId] || 0,
-    });
+  const handleNavigateView = (view: MainAppView) => {
+    setCurrentView(view);
+    try {
+      localStorage.setItem('guide_in_main_view', view);
+    } catch (e) {}
   };
 
-  const handleChangeMode = (newMode: AppMode) => {
-    setMode(newMode);
-    saveStoredProgress({
-      lastMode: newMode,
-    });
-  };
-
-  const handleGoHome = () => {
-    setMode('landing');
-    saveStoredProgress({
-      lastMode: 'landing',
-    });
-  };
-
-  const handleStepChange = (index: number) => {
-    setModuleStepIndices((prev) => ({
-      ...prev,
-      [activeModuleId]: index,
-    }));
-    saveStoredProgress({
-      lastActiveModuleId: activeModuleId,
-      lastStepIndex: index,
-    });
-  };
-
-  // Complete a module, mark it finished, and unlock the next module!
-  const handleCompleteModule = (moduleId: ModuleId) => {
-    let nextCompleted = completedModules;
-    if (!completedModules.includes(moduleId)) {
-      nextCompleted = [...completedModules, moduleId];
-      setCompletedModules(nextCompleted);
-    }
-
-    // Find next module index
-    const currentIndex = TRAINING_MODULES.findIndex((m) => m.id === moduleId);
-    let nextUnlocked = unlockedModules;
-
-    if (currentIndex < TRAINING_MODULES.length - 1) {
-      const nextModule = TRAINING_MODULES[currentIndex + 1];
-      if (!unlockedModules.includes(nextModule.id)) {
-        nextUnlocked = [...unlockedModules, nextModule.id];
-        setUnlockedModules(nextUnlocked);
-      }
-      setActiveModuleId(nextModule.id);
-      setModuleStepIndices((prev) => ({
-        ...prev,
-        [nextModule.id]: 0,
-      }));
-
-      saveStoredProgress({
-        completedModules: nextCompleted,
-        unlockedModules: nextUnlocked,
-        lastActiveModuleId: nextModule.id,
-      });
-    } else {
-      saveStoredProgress({
-        completedModules: nextCompleted,
-        unlockedModules: nextUnlocked,
-        lastActiveModuleId: moduleId,
-      });
-    }
-  };
-
-  // Keyboard navigation for presentation mode
-  useEffect(() => {
-    if (mode !== 'presentation') return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        e.preventDefault();
-        if (activeStepIndex < currentModule.steps.length - 1) {
-          handleStepChange(activeStepIndex + 1);
-        }
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (activeStepIndex > 0) {
-          handleStepChange(activeStepIndex - 1);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, activeStepIndex, currentModule]);
-
-  if (mode === 'landing') {
+  // 1. GLOBAL LANDING HUB (Landing 1)
+  if (currentView === 'global-hub') {
     return (
-      <LandingPage
-        unlockedModules={unlockedModules}
-        completedModules={completedModules}
-        onStartWorkflow={handleStartWorkflow}
+      <GlobalLandingHub
+        onSelectGistex={() => handleNavigateView('gistex-sales')}
+        onSelectTemplateHub={() => handleNavigateView('templating-hub')}
       />
     );
   }
 
-  // DEDICATED PRESENTATION TOUR MODE (Read-only, interactive speech bubbles, auto-typing, evaluation flow)
-  if (mode === 'presentation' && activeModuleId === 'business-partner') {
+  // 2. GISTEX SALES ERP APP (Landing 2 - Modul Datatex Gistex Tetap Utuh)
+  if (currentView === 'gistex-sales') {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-        <Header
-          mode={mode}
-          onChangeMode={handleChangeMode}
-          onGoHome={handleGoHome}
-        />
-        <PresentationBPTour
-          module={currentModule}
-          onExitPresentation={() => handleChangeMode('sandbox')}
-          onCompleteAndUnlockNext={() => {
-            handleCompleteModule('business-partner');
-            handleChangeMode('sandbox');
-          }}
-        />
-      </div>
+      <GistexSalesApp
+        onBackToGlobalLanding={() => handleNavigateView('global-hub')}
+      />
     );
   }
 
-  // STANDARD SANDBOX MODE (Free interaction, form editing, etc.)
+  // 3. TEMPLATING & DEMO STUDIO (Landing 3 - Fitur Baru Template Wizard, CLI, dll)
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <Header
-        mode={mode}
-        onChangeMode={handleChangeMode}
-        onGoHome={handleGoHome}
-      />
-
-      <ModuleNavigation
-        activeModuleId={activeModuleId}
-        activeStepIndex={activeStepIndex}
-        unlockedModules={unlockedModules}
-        completedModules={completedModules}
-        onSelectModule={(id) => {
-          setActiveModuleId(id);
-          saveStoredProgress({ lastActiveModuleId: id });
-        }}
-        onSelectStep={handleStepChange}
-      />
-
-      <main className="flex-1">
-        <WorkflowView
-          activeModuleId={activeModuleId}
-          activeStepIndex={activeStepIndex}
-          unlockedModules={unlockedModules}
-          isPresentation={false}
-          onStepChange={handleStepChange}
-          onSelectModule={(id) => setActiveModuleId(id)}
-          onCompleteModule={handleCompleteModule}
-        />
-      </main>
-    </div>
+    <TemplatingHubLanding
+      onBackToGlobalLanding={() => handleNavigateView('global-hub')}
+    />
   );
 }
 
